@@ -100,12 +100,12 @@ const LockOnScanner = ({ color, isLocked }: { color: string, isLocked: boolean }
     <motion.div initial={{ height: 0 }} animate={{ height: "100%" }} transition={{ duration: 0.8, ease: "easeOut" }} className={`absolute w-[1px] bg-current transition-all duration-1000 ${isLocked ? "opacity-20" : "opacity-60"}`} />
     <motion.div initial={{ width: 0 }} animate={{ width: "100%" }} transition={{ duration: 0.8, ease: "easeOut" }} className={`absolute h-[1px] bg-current transition-all duration-1000 ${isLocked ? "opacity-20" : "opacity-60"}`} />
     
-    {/* Target Square that aggressively snaps on lock */}
+    {/* Target Square that smoothly snaps on lock */}
     <motion.div 
-      initial={{ scale: 4, opacity: 0, rotate: 45 }} 
-      animate={isLocked ? { scale: 0.5, opacity: 1, rotate: 0 } : { scale: 1.0, opacity: 0.8, rotate: 0 }} 
-      transition={isLocked ? { type: "spring", stiffness: 500, damping: 20 } : { duration: 0.6, ease: "circOut", delay: 0.2 }}
-      className={`absolute w-12 h-12 border border-current transition-all duration-300 ${isLocked ? "opacity-100 border-[3px]" : "opacity-80"}`}
+      initial={{ scale: 4, opacity: 0, rotate: 45, borderWidth: "1px" }} 
+      animate={isLocked ? { scale: 0.5, opacity: 1, rotate: 0, borderWidth: "3px" } : { scale: 1.0, opacity: 0.8, rotate: 0, borderWidth: "1px" }} 
+      transition={isLocked ? { duration: 0.4, ease: "easeOut" } : { duration: 0.6, ease: "circOut", delay: 0.2 }}
+      className={`absolute w-12 h-12 border-current`}
     >
       <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-current" />
       <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-current" />
@@ -251,7 +251,7 @@ export default function Home() {
               initial={{ x: "20vw", opacity: 0 }} 
               animate={{ x: 0, opacity: 1 }} 
               transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.1 }}
-              className={`absolute top-[28%] sm:top-[35%] right-4 sm:right-[15%] -translate-y-1/2 flex flex-col items-start ${shadowColor}`}
+              className={`absolute top-[32%] sm:top-[38%] right-4 sm:right-[15%] -translate-y-1/2 flex flex-col items-start ${shadowColor}`}
             >
               <span className={`font-mono text-[10px] sm:text-[14px] font-bold leading-none italic uppercase whitespace-nowrap mb-1 ${themeColor}`}>
                 VISITOR COEFFICIENT:
