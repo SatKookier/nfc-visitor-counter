@@ -44,8 +44,8 @@ const ScrambleNumber = ({ finalNumber, delayMs = 0 }: { finalNumber: string, del
 };
 
 // Huge Tick-Marked Compass Ring to fill whitespace
-const CompassBackground = ({ color }: { color: string }) => (
-  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150vw] h-[150vw] max-w-[800px] max-h-[800px] pointer-events-none opacity-20 mix-blend-screen flex items-center justify-center">
+const CompassBackground = ({ color, isLocked }: { color: string, isLocked?: boolean }) => (
+  <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150vw] h-[150vw] max-w-[800px] max-h-[800px] pointer-events-none mix-blend-screen flex items-center justify-center transition-opacity duration-1000 ${isLocked ? "opacity-10" : "opacity-[0.15]"}`}>
     <motion.svg viewBox="0 0 100 100" className="absolute w-[90%] h-[90%]" animate={{ rotate: 360 }} transition={{ duration: 40, repeat: Infinity, ease: "linear" }}>
       <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="0.1" className={color} />
       {/* Outer Gear */}
@@ -95,15 +95,15 @@ const LockOnScanner = ({ color, isLocked }: { color: string, isLocked: boolean }
       />
     </div>
 
-    <div className={`absolute inset-0 rounded-full border border-current transition-all duration-300 ${isLocked ? "opacity-30 border-[1px] scale-90" : "opacity-10 scale-100"}`} />
+    <div className={`absolute inset-0 rounded-full border border-current transition-all duration-1000 ${isLocked ? "opacity-[0.15] border-[1px] scale-90" : "opacity-20 scale-100"}`} />
     
-    <motion.div initial={{ height: 0 }} animate={{ height: "100%" }} transition={{ duration: 0.8, ease: "easeOut" }} className="absolute w-[1px] bg-current opacity-50 transition-colors" />
-    <motion.div initial={{ width: 0 }} animate={{ width: "100%" }} transition={{ duration: 0.8, ease: "easeOut" }} className="absolute h-[1px] bg-current opacity-50 transition-colors" />
+    <motion.div initial={{ height: 0 }} animate={{ height: "100%" }} transition={{ duration: 0.8, ease: "easeOut" }} className={`absolute w-[1px] bg-current transition-all duration-1000 ${isLocked ? "opacity-20" : "opacity-60"}`} />
+    <motion.div initial={{ width: 0 }} animate={{ width: "100%" }} transition={{ duration: 0.8, ease: "easeOut" }} className={`absolute h-[1px] bg-current transition-all duration-1000 ${isLocked ? "opacity-20" : "opacity-60"}`} />
     
     {/* Target Square that aggressively snaps on lock */}
     <motion.div 
       initial={{ scale: 4, opacity: 0, rotate: 45 }} 
-      animate={isLocked ? { scale: 0.8, opacity: 1, rotate: 0 } : { scale: 1, opacity: 0.8, rotate: 0 }} 
+      animate={isLocked ? { scale: 0.5, opacity: 1, rotate: 0 } : { scale: 1.0, opacity: 0.8, rotate: 0 }} 
       transition={isLocked ? { type: "spring", stiffness: 500, damping: 20 } : { duration: 0.6, ease: "circOut", delay: 0.2 }}
       className={`absolute w-12 h-12 border border-current transition-all duration-300 ${isLocked ? "opacity-100 border-[3px]" : "opacity-80"}`}
     >
@@ -189,10 +189,10 @@ export default function Home() {
       <div className="absolute inset-0 z-0 pointer-events-none bg-[linear-gradient(rgba(0,255,255,0.015)_1px,rgba(0,0,0,0)_1px)] bg-[length:100%_4px] mix-blend-overlay" />
       <div className="absolute inset-0 z-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 100%)' }} />
       <HexMesh color={themeColor} />
-      <CompassBackground color={themeColor} />
+      <CompassBackground color={themeColor} isLocked={isLocked || !!error} />
 
       {/* Persistent Background Alignment Grid */}
-      <div className="absolute top-1/2 left-[30%] sm:left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] max-w-[600px] max-h-[600px] pointer-events-none opacity-[0.2]">
+      <div className={`absolute top-1/2 left-[30%] sm:left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] max-w-[600px] max-h-[600px] pointer-events-none transition-opacity duration-1000 ${isLocked || !!error ? "opacity-10" : "opacity-[0.15]"}`}>
         <div className={`absolute top-1/2 -left-[50%] w-full h-[0.5px] ${themeColor}`} />
         <div className={`absolute top-1/2 -right-[50%] w-full h-[0.5px] ${themeColor}`} />
         <div className={`absolute -top-[50%] left-1/2 w-[0.5px] h-full ${themeColor}`} />
@@ -251,7 +251,7 @@ export default function Home() {
               initial={{ x: "20vw", opacity: 0 }} 
               animate={{ x: 0, opacity: 1 }} 
               transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.1 }}
-              className={`absolute top-[35%] sm:top-[40%] right-4 sm:right-[15%] -translate-y-1/2 flex flex-col items-start ${shadowColor}`}
+              className={`absolute top-[28%] sm:top-[35%] right-4 sm:right-[15%] -translate-y-1/2 flex flex-col items-start ${shadowColor}`}
             >
               <span className={`font-mono text-[10px] sm:text-[14px] font-bold leading-none italic uppercase whitespace-nowrap mb-1 ${themeColor}`}>
                 VISITOR COEFFICIENT:
