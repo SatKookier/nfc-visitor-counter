@@ -3,42 +3,49 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Scramble text animation
-const ScrambleNumber = ({ finalNumber }: { finalNumber: string }) => {
-  const [display, setDisplay] = useState("000.0");
+// Scramble text animation: Restricted to numbers, delayed start for mechanical impact
+const ScrambleNumber = ({ finalNumber, delayMs = 0 }: { finalNumber: string, delayMs?: number }) => {
+  const [display, setDisplay] = useState(finalNumber.replace(/[0-9]/g, "0"));
 
   useEffect(() => {
-    let frame = 0;
-    const maxFrames = 35; // slightly longer scramble
-    const chars = "0123456789"; 
+    let timeout: NodeJS.Timeout;
     
-    const interval = setInterval(() => {
-      frame++;
-      if (frame >= maxFrames) {
-        clearInterval(interval);
-        setDisplay(finalNumber);
-      } else {
-        const scrambled = finalNumber
-          .split("")
-          .map((char, i) => {
-            if (char === ".") return "."; 
-            if (i < (frame / maxFrames) * finalNumber.length) { return char; }
-            return chars[Math.floor(Math.random() * chars.length)];
-          })
-          .join("");
-        setDisplay(scrambled);
-      }
-    }, 30); // Faster tick rate
+    timeout = setTimeout(() => {
+      let frame = 0;
+      const maxFrames = 30; // Intense scramble duration
+      const chars = "0123456789"; 
+      
+      const interval = setInterval(() => {
+        frame++;
+        if (frame >= maxFrames) {
+          clearInterval(interval);
+          setDisplay(finalNumber);
+        } else {
+          const scrambled = finalNumber
+            .split("")
+            .map((char, i) => {
+              if (char === ".") return "."; 
+              // Reveal characters gradually from left to right as frames progress
+              if (i < (frame / maxFrames) * finalNumber.length) { return char; }
+              return chars[Math.floor(Math.random() * chars.length)];
+            })
+            .join("");
+          setDisplay(scrambled);
+        }
+      }, 30); // Faster tick rate
 
-    return () => clearInterval(interval);
-  }, [finalNumber]);
+      return () => clearInterval(interval);
+    }, delayMs);
+
+    return () => clearTimeout(timeout);
+  }, [finalNumber, delayMs]);
 
   return <>{display}</>;
 };
 
-// Backgrounds
+// Huge Tick-Marked Compass Ring to fill whitespace
 const CompassBackground = ({ color }: { color: string }) => (
-  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150vw] h-[150vw] max-w-[1000px] max-h-[1000px] pointer-events-none opacity-[0.15] mix-blend-screen flex items-center justify-center">
+  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150vw] h-[150vw] max-w-[1000px] max-h-[1000px] pointer-events-none opacity-[0.10] mix-blend-screen flex items-center justify-center">
     <motion.svg viewBox="0 0 100 100" className="w-full h-full absolute inset-0" animate={{ rotate: 360 }} transition={{ duration: 120, repeat: Infinity, ease: "linear" }}>
       <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="0.2" className={color} />
       <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="0.5 4" className={color} />
@@ -51,8 +58,9 @@ const CompassBackground = ({ color }: { color: string }) => (
   </div>
 );
 
-const HexMesh = () => (
-  <div className="absolute top-0 right-0 w-[60%] h-[40%] opacity-[0.05] pointer-events-none mix-blend-screen"
+// Hexagonal pattern overlay
+const HexMesh = ({ color }: { color: string }) => (
+  <div className="absolute top-0 right-0 w-[60%] h-[40%] opacity-[0.04] pointer-events-none mix-blend-screen"
        style={{
          backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l10 17.32v20L20 54.64 0 37.32v-20z' fill='none' stroke='%2300e5ff' stroke-width='1'/%3E%3C/svg%3E")`,
          backgroundSize: '40px 40px',
@@ -62,24 +70,34 @@ const HexMesh = () => (
   />
 );
 
-// Lock On Scanner now persists so the transition feels violent and structural
-const LockOnScanner = ({ color, isScanning }: { color: string, isScanning: boolean }) => (
-  <div className="relative w-64 h-64 flex items-center justify-center">
-    {isScanning && (
-      <motion.div 
-        className="absolute inset-0 rounded-full opacity-30"
-        style={{ background: 'conic-gradient(from 0deg, transparent 70%, currentColor 100%)' }}
-        animate={{ rotate: 360 }}
-        transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-      />
-    )}
-    <div className={`absolute inset-0 rounded-full border border-current transition-opacity duration-500 ${isScanning ? 'opacity-20' : 'opacity-[0.05]'} ${color}`} />
+// Persistent Reticle - changes mode based on scan completion
+const LockOnScanner = ({ color, isLocked }: { color: string, isLocked: boolean }) => (
+  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 flex items-center justify-center z-0 pointer-events-none">
+    {/* Sweeping Radar component stops when locked */}
+    <AnimatePresence>
+      {!isLocked && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.3 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          className="absolute inset-0 rounded-full"
+          style={{ background: 'conic-gradient(from 0deg, transparent 70%, currentColor 100%)' }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+        />
+      )}
+    </AnimatePresence>
+
+    <div className={`absolute inset-0 rounded-full border border-current transition-all duration-300 ${isLocked ? "opacity-40 border-[2px] scale-95" : "opacity-20"} ${color}`} />
     
-    {/* Inner Reticle Box */}
+    <motion.div initial={{ height: 0 }} animate={{ height: "100%" }} transition={{ duration: 0.8, ease: "easeOut" }} className={`absolute w-[1px] bg-current opacity-50 transition-colors ${color}`} />
+    <motion.div initial={{ width: 0 }} animate={{ width: "100%" }} transition={{ duration: 0.8, ease: "easeOut" }} className={`absolute h-[1px] bg-current opacity-50 transition-colors ${color}`} />
+    
+    {/* Target Square that aggressively snaps on lock */}
     <motion.div 
-      animate={{ scale: isScanning ? 1 : 1.2, rotate: isScanning ? 0 : 45, opacity: isScanning ? 0.8 : 0.2 }} 
-      transition={{ duration: 0.5, type: "spring" }}
-      className={`absolute w-12 h-12 border border-current ${color}`}
+      initial={{ scale: 4, opacity: 0, rotate: 45 }} 
+      animate={isLocked ? { scale: 0.8, opacity: 1, rotate: 0 } : { scale: 1, opacity: 0.8, rotate: 0 }} 
+      transition={isLocked ? { type: "spring", stiffness: 500, damping: 20 } : { duration: 0.6, ease: "circOut", delay: 0.2 }}
+      className={`absolute w-12 h-12 border border-current transition-all duration-300 ${isLocked ? "opacity-100 border-[3px]" : "opacity-80"} ${color}`}
     >
       <div className={`absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-current ${color}`} />
       <div className={`absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-current ${color}`} />
@@ -100,15 +118,16 @@ export default function Home() {
   const [scanStage, setScanStage] = useState<number>(0); 
   
   useEffect(() => {
-    // Stage 1 fires scanning UI
-    const t1 = setTimeout(() => setScanStage(1), 500); 
-    const t2 = setTimeout(() => checkVisitorStatus(), 2500); 
+    // Artificial dramatic delay
+    const t1 = setTimeout(() => setScanStage(1), 1000); 
+    const t2 = setTimeout(() => checkVisitorStatus(), 3500); 
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   const checkVisitorStatus = async () => {
     try {
       const storedNumber = localStorage.getItem("nfc_visitor_number");
+      
       const response = await fetch("/api/visitor", { method: "POST" });
       if (!response.ok) throw new Error("Connection failed");
       const data = await response.json();
@@ -139,35 +158,32 @@ export default function Home() {
   let themeColor = "border-[#00e5ff] text-[#00e5ff]";
   let shadowColor = "drop-shadow-[0_0_10px_rgba(0,229,255,0.8)]";
   let targetAction = isReturning ? "KNOWN ENTITY RESTORED" : "NEW SYNCHRONIZATION";
-  let flashColor = "bg-[#00e5ff]";
   
   if (error) {
     themeColor = "border-red-500 text-red-500";
     shadowColor = "drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]";
     targetAction = "SYSTEM ERROR";
-    flashColor = "bg-red-500";
   } else if (isHazard) {
     themeColor = "border-red-500 text-red-500";
     shadowColor = "drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]";
-    flashColor = "bg-red-500";
   } else if (isCaution) {
     themeColor = "border-yellow-400 text-yellow-400";
     shadowColor = "drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]";
-    flashColor = "bg-yellow-400";
   }
 
   const numericValue = visitorNumber ? `${visitorNumber.toString()}.0` : "000.0";
+  const isLocked = !loading && visitorNumber !== null && !error;
 
   return (
     <main className="fixed inset-0 w-full h-full bg-[#010204] text-white overflow-hidden selection:bg-[#00e5ff] selection:text-black font-sans">
       
-      {/* Visual Depth Backgrounds */}
+      {/* Background Graphic Fields */}
       <div className="absolute inset-0 z-0 pointer-events-none bg-[linear-gradient(rgba(0,255,255,0.015)_1px,rgba(0,0,0,0)_1px)] bg-[length:100%_4px] mix-blend-overlay" />
       <div className="absolute inset-0 z-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 100%)' }} />
-      <HexMesh />
+      <HexMesh color={themeColor} />
       <CompassBackground color={themeColor} />
 
-      {/* Central Thin Reticle Grid */}
+      {/* Persistent Background Alignment Grid */}
       <div className="absolute top-1/2 left-[30%] sm:left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] max-w-[600px] max-h-[600px] pointer-events-none opacity-[0.2]">
         <div className={`absolute top-1/2 -left-[50%] w-full h-[0.5px] ${themeColor}`} />
         <div className={`absolute top-1/2 -right-[50%] w-full h-[0.5px] ${themeColor}`} />
@@ -175,22 +191,20 @@ export default function Home() {
         <div className={`absolute -bottom-[50%] left-1/2 w-[0.5px] h-full ${themeColor}`} />
       </div>
 
-      {/* The LockOnScanner persists across both layouts */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10">
-        <LockOnScanner color={themeColor} isScanning={loading || error !== null} />
-      </div>
+      {/* The Central Reticle is permanently anchored, driving the visual narrative */}
+      <LockOnScanner color={themeColor} isLocked={isLocked || !!error} />
 
-      <AnimatePresence mode="wait">
+      {/* Loading Scan Overlay */}
+      <AnimatePresence>
         {(loading || error) && (
           <motion.div
-            key="overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className={`absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none ${themeColor}`}
+            key="scan-overlay"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 1.1 }}
+            transition={{ duration: 0.1 }} // Extreme fast disappear, no fading
+            className={`absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none ${themeColor}`}
           >
-            <div className={`mt-40 flex flex-col items-center`}>
+            <div className={`mt-32 flex flex-col items-center`}>
               <span className={`font-mono text-sm tracking-widest uppercase italic mb-2 drop-shadow-[0_0_5px_currentColor]`}>
                 {error ? "SYSTEM DOWN" : "[ TARGET SCAN IN PROGRESS ]"}
               </span>
@@ -199,7 +213,7 @@ export default function Home() {
                   <motion.div 
                     className="absolute inset-y-0 left-0 w-1/3 bg-current"
                     animate={{ x: ["-100%", "300%"] }}
-                    transition={{ repeat: Infinity, duration: 0.6, ease: "easeInOut" }}
+                    transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
                   />
                 )}
               </div>
@@ -209,113 +223,127 @@ export default function Home() {
             </div>
           </motion.div>
         )}
+      </AnimatePresence>
 
-        {!loading && !error && visitorNumber !== null && (
-          <>
-            {/* The dramatic Flash Bang when data lock is complete */}
+      {/* Result HUD Panels: Sliding in aggressively from the edges */}
+      <AnimatePresence>
+        {isLocked && (
+          <div className="absolute inset-0 z-20 pointer-events-none">
+            
+            {/* Visual Screen Flash to simulate lock-on burst */}
             <motion.div 
-              key="flash"
-              initial={{ opacity: 0.8 }}
-              animate={{ opacity: 0 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className={`absolute inset-0 ${flashColor} z-50 pointer-events-none mix-blend-screen mix-blend-overlay`}
+              initial={{ opacity: 0.8 }} 
+              animate={{ opacity: 0 }} 
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="absolute inset-0 bg-cyan-200 mix-blend-overlay z-50 pointer-events-none"
             />
 
-            <div className="absolute inset-0 z-20 pointer-events-none">
+            {/* RIGHT SIDE: Main Target Area */}
+            <motion.div 
+              initial={{ x: "20vw", opacity: 0 }} 
+              animate={{ x: 0, opacity: 1 }} 
+              transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.1 }}
+              className={`absolute top-[35%] sm:top-[40%] right-4 sm:right-[15%] -translate-y-1/2 flex flex-col items-start ${shadowColor}`}
+            >
+              <span className={`font-mono text-[10px] sm:text-[14px] font-bold leading-none italic uppercase whitespace-nowrap mb-1 ${themeColor}`}>
+                VISITOR COEFFICIENT:
+              </span>
               
-              {/* RIGHT SIDE: Snaps in violently from the right */}
-              <motion.div 
-                key="right-panel"
-                initial={{ x: 100, opacity: 0, skewX: -10 }}
-                animate={{ x: 0, opacity: 1, skewX: 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.05 }}
-                className={`absolute top-[35%] sm:top-[40%] right-4 sm:right-[15%] -translate-y-[45%] flex flex-col items-start ${shadowColor}`}
-              >
-                <span className={`font-mono text-[10px] sm:text-[14px] font-bold leading-none italic uppercase whitespace-nowrap mb-1 ${themeColor}`}>
-                  VISITOR COEFFICIENT:
+              <div className="flex items-baseline overflow-hidden py-1">
+                <span className="font-sans text-[4.5rem] sm:text-[7rem] md:text-[8rem] font-bold tracking-tighter text-white leading-none">
+                  {/* Wait 200ms AFTER panel arrives before scrambling for solid impact */}
+                  <ScrambleNumber finalNumber={numericValue.split(".")[0]} delayMs={300} />
                 </span>
-                
-                <div className="flex items-baseline">
-                  <span className="font-sans text-[4.5rem] sm:text-[7rem] md:text-[8rem] font-bold tracking-tighter text-white leading-none">
-                    <ScrambleNumber finalNumber={numericValue.split(".")[0]} />
-                  </span>
-                  <span className={`font-mono text-2xl sm:text-4xl font-bold ml-1 ${themeColor}`}>
-                    .{numericValue.split(".")[1]}
-                  </span>
-                </div>
-                
-                <div className="flex flex-col mt-2 border-l-[2px] border-current pl-3 pb-1" style={{ borderColor: themeColor.split(" ")[1].replace("text-", "") }}>
-                  <span className="font-mono text-[9px] sm:text-[10px] tracking-widest uppercase text-white/70">
-                    STATUS:
-                  </span>
-                  <span className={`font-mono italic font-bold text-sm sm:text-lg tracking-wider whitespace-nowrap ${themeColor}`}>
-                    [ {targetAction} ]
-                  </span>
-                </div>
-
-                <motion.p 
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}
-                  className="font-mono text-[8.5px] sm:text-[10px] text-white/50 uppercase mt-6 max-w-[220px] leading-relaxed whitespace-normal"
-                >
-                  Access log verified. You have been recorded as the <span className={`font-bold ${themeColor}`}>{visitorNumber}th</span> entity to synchronize with this terminal.
-                </motion.p>
-              </motion.div>
-
-              {/* LEFT BOTTOM: Snaps in violently from the left */}
-              <motion.div 
-                key="left-panel"
-                initial={{ x: -100, opacity: 0, skewX: 10 }}
-                animate={{ x: 0, opacity: 1, skewX: 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.15 }}
-                className="absolute bottom-[10%] sm:bottom-24 left-4 sm:left-12 flex flex-col items-start"
-              >
-                <div className="flex items-center space-x-2 mb-4 opacity-70">
-                  <div className={`w-8 h-[1px] bg-current ${themeColor}`} />
-                  <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-white">NETWORK // SECURE_LINK</span>
-                </div>
-
-                <div className="relative w-28 h-28 sm:w-40 sm:h-40 mb-4 ml-4">
-                  <div className={`absolute inset-0 rounded-full border-[0.5px] border-current opacity-30 ${themeColor}`} />
-                  <motion.div 
-                    className={`absolute inset-2 rounded-full border-t-[8px] border-l-[2px] border-current opacity-60 ${themeColor}`}
-                    animate={{ rotate: 360 }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                  />
-                  <motion.div 
-                    className={`absolute inset-5 rounded-full border-b-[2px] border-current opacity-80 ${themeColor}`}
-                    animate={{ rotate: -360 }} transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                    style={{ clipPath: 'polygon(0 50%, 100% 50%, 100% 100%, 0 100%)' }}
-                  />
-                  <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-current opacity-80 ${themeColor}`} />
-                </div>
-                
-                <div className={`flex flex-col border-l border-current pl-3 ml-2 ${themeColor}`}>
-                  <span className={`font-mono text-[10px] sm:text-xs uppercase tracking-widest font-bold whitespace-nowrap mb-1`}>
-                    AREA SYNCHRO LEVEL
-                  </span>
-                  <div className="flex items-end space-x-3 mb-1">
-                    <span className="font-mono italic font-bold text-3xl sm:text-4xl text-white leading-none">
-                      {areaStress.toString().padStart(2, "0")}
-                    </span>
-                    <span className="font-mono text-[8px] text-white/50 tracking-widest mb-1">
-                      {region}
-                    </span>
-                  </div>
-                  <span className="font-mono text-[7px] sm:text-[8px] text-white/40 uppercase mt-2 max-w-[190px] leading-relaxed whitespace-normal">
-                    Regional synchro-log updated. YOU and <span className={`font-bold text-white`}>{areaStress > 1 ? areaStress - 1 : 0}</span> OTHER ENTITIES have synchronized within the [{region}] sector.
-                  </span>
-                </div>
-              </motion.div>
-
-              {/* Viewfinder brackets snap into place */}
-              <motion.div initial={{ opacity: 0, scale: 1.2 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="absolute inset-0">
-                <div className={`absolute top-4 left-4 w-4 h-4 border-t border-l ${themeColor} opacity-[0.3]`} />
-                <div className={`absolute top-4 right-4 w-4 h-4 border-t border-r ${themeColor} opacity-[0.3]`} />
-                <div className={`absolute bottom-4 left-4 w-4 h-4 border-b border-l ${themeColor} opacity-[0.3]`} />
-                <div className={`absolute bottom-4 right-4 w-4 h-4 border-b border-r ${themeColor} opacity-[0.3]`} />
-              </motion.div>
+                <span className={`font-mono text-2xl sm:text-4xl font-bold ml-1 ${themeColor}`}>
+                  .{numericValue.split(".")[1]}
+                </span>
+              </div>
               
-            </div>
-          </>
+              <motion.div 
+                initial={{ x: 20, opacity: 0 }} 
+                animate={{ x: 0, opacity: 1 }} 
+                transition={{ type: "spring", stiffness: 400, damping: 25, delay: 0.4 }}
+                className="flex flex-col mt-2 border-l-[2px] border-current pl-3 pb-1" style={{ borderColor: themeColor.split(" ")[1].replace("text-", "") }}
+              >
+                <span className="font-mono text-[9px] sm:text-[10px] tracking-widest uppercase text-white/70">
+                  STATUS:
+                </span>
+                <span className={`font-mono italic font-bold text-sm sm:text-lg tracking-wider whitespace-nowrap ${themeColor}`}>
+                  [ {targetAction} ]
+                </span>
+              </motion.div>
+
+              <motion.p 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                transition={{ duration: 0.5, delay: 0.8 }}
+                className="font-mono text-[8.5px] sm:text-[10px] text-white/50 uppercase mt-6 max-w-[220px] leading-relaxed whitespace-normal"
+              >
+                Access log verified. You have been recorded as the <span className={`font-bold ${themeColor}`}>
+                  <ScrambleNumber finalNumber={visitorNumber.toString()} delayMs={600} />th
+                </span> entity to synchronize with this terminal.
+              </motion.p>
+            </motion.div>
+
+            {/* LEFT BOTTOM: Area Level Radar */}
+            <motion.div 
+              initial={{ y: "10vh", opacity: 0 }} 
+              animate={{ y: 0, opacity: 1 }} 
+              transition={{ type: "spring", stiffness: 350, damping: 25, delay: 0.3 }}
+              className="absolute bottom-[10%] sm:bottom-24 left-4 sm:left-12 flex flex-col items-start"
+            >
+              
+              <div className="flex items-center space-x-2 mb-4 opacity-70">
+                <div className={`w-8 h-[1px] bg-current ${themeColor}`} />
+                <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-white">NETWORK // SECURE_LINK</span>
+              </div>
+
+              <div className="relative w-28 h-28 sm:w-40 sm:h-40 mb-4 ml-4">
+                <div className={`absolute inset-0 rounded-full border-[0.5px] border-current opacity-30 ${themeColor}`} />
+                
+                <motion.div 
+                  className={`absolute inset-2 rounded-full border-t-[8px] border-l-[2px] border-current opacity-60 ${themeColor}`}
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                />
+                <motion.div 
+                  className={`absolute inset-5 rounded-full border-b-[2px] border-current opacity-80 ${themeColor}`}
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                  style={{ clipPath: 'polygon(0 50%, 100% 50%, 100% 100%, 0 100%)' }}
+                />
+                <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-current opacity-80 ${themeColor}`} />
+              </div>
+              
+              <div className={`flex flex-col border-l border-current pl-3 ml-2 ${themeColor}`}>
+                <span className={`font-mono text-[10px] sm:text-xs uppercase tracking-widest font-bold whitespace-nowrap mb-1`}>
+                  AREA SYNCHRO LEVEL
+                </span>
+                <div className="flex items-end space-x-3 mb-1">
+                  <span className="font-mono italic font-bold text-3xl sm:text-4xl text-white leading-none">
+                    <ScrambleNumber finalNumber={areaStress.toString().padStart(2, "0")} delayMs={500} />
+                  </span>
+                  <span className="font-mono text-[8px] text-white/50 tracking-widest mb-1">
+                    {region}
+                  </span>
+                </div>
+                <span className="font-mono text-[7px] sm:text-[8px] text-white/40 uppercase mt-2 max-w-[190px] leading-relaxed">
+                  Regional synchro-log updated. YOU and <span className={`font-bold text-white`}>
+                    <ScrambleNumber finalNumber={areaStress > 1 ? (areaStress - 1).toString() : "0"} delayMs={600} />
+                  </span> OTHER ENTITIES have synchronized within the [{region}] sector.
+                </span>
+              </div>
+            </motion.div>
+
+            {/* Frame marks fade in last */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.3 }} transition={{ delay: 0.8 }}>
+              <div className={`absolute top-4 left-4 w-4 h-4 border-t border-l ${themeColor}`} />
+              <div className={`absolute top-4 right-4 w-4 h-4 border-t border-r ${themeColor}`} />
+              <div className={`absolute bottom-4 left-4 w-4 h-4 border-b border-l ${themeColor}`} />
+              <div className={`absolute bottom-4 right-4 w-4 h-4 border-b border-r ${themeColor}`} />
+            </motion.div>
+            
+          </div>
         )}
       </AnimatePresence>
 
