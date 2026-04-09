@@ -45,15 +45,20 @@ const ScrambleNumber = ({ finalNumber, delayMs = 0 }: { finalNumber: string, del
 
 // Huge Tick-Marked Compass Ring to fill whitespace
 const CompassBackground = ({ color }: { color: string }) => (
-  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150vw] h-[150vw] max-w-[1000px] max-h-[1000px] pointer-events-none opacity-[0.10] mix-blend-screen flex items-center justify-center">
-    <motion.svg viewBox="0 0 100 100" className="w-full h-full absolute inset-0" animate={{ rotate: 360 }} transition={{ duration: 120, repeat: Infinity, ease: "linear" }}>
-      <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="0.2" className={color} />
-      <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="0.5 4" className={color} />
-      <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="10 2" className={color} />
-    </motion.svg>
-    <motion.svg viewBox="0 0 100 100" className="w-[80%] h-[80%] absolute inset-0 m-auto" animate={{ rotate: -360 }} transition={{ duration: 90, repeat: Infinity, ease: "linear" }}>
+  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150vw] h-[150vw] max-w-[800px] max-h-[800px] pointer-events-none opacity-20 mix-blend-screen flex items-center justify-center">
+    <motion.svg viewBox="0 0 100 100" className="absolute w-[90%] h-[90%]" animate={{ rotate: 360 }} transition={{ duration: 40, repeat: Infinity, ease: "linear" }}>
       <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="0.1" className={color} />
-      <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" strokeWidth="4" strokeDasharray="0.2 12" className={color} />
+      {/* Outer Gear */}
+      <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="1 3" className={color} />
+    </motion.svg>
+    <motion.svg viewBox="0 0 100 100" className="absolute w-[75%] h-[75%]" animate={{ rotate: -360 }} transition={{ duration: 60, repeat: Infinity, ease: "linear" }}>
+      {/* Inner Gear */}
+      <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="15 2 2 2" className={color} />
+      <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray="0.5 6" className={color} />
+    </motion.svg>
+    <motion.svg viewBox="0 0 100 100" className="absolute w-[60%] h-[60%]" animate={{ rotate: 360 }} transition={{ duration: 80, repeat: Infinity, ease: "linear" }}>
+      <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="0.2" className={color} />
+      <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="30 4" className={color} />
     </motion.svg>
   </div>
 );
@@ -72,37 +77,40 @@ const HexMesh = ({ color }: { color: string }) => (
 
 // Persistent Reticle - changes mode based on scan completion
 const LockOnScanner = ({ color, isLocked }: { color: string, isLocked: boolean }) => (
-  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 flex items-center justify-center z-0 pointer-events-none">
-    {/* Sweeping Radar component stops when locked */}
-    <AnimatePresence>
-      {!isLocked && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.3 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          className="absolute inset-0 rounded-full"
-          style={{ background: 'conic-gradient(from 0deg, transparent 70%, currentColor 100%)' }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-        />
-      )}
-    </AnimatePresence>
-
-    <div className={`absolute inset-0 rounded-full border border-current transition-all duration-300 ${isLocked ? "opacity-40 border-[2px] scale-95" : "opacity-20"} ${color}`} />
+  <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 sm:w-80 sm:h-80 flex items-center justify-center z-0 pointer-events-none ${color}`}>
     
-    <motion.div initial={{ height: 0 }} animate={{ height: "100%" }} transition={{ duration: 0.8, ease: "easeOut" }} className={`absolute w-[1px] bg-current opacity-50 transition-colors ${color}`} />
-    <motion.div initial={{ width: 0 }} animate={{ width: "100%" }} transition={{ duration: 0.8, ease: "easeOut" }} className={`absolute h-[1px] bg-current opacity-50 transition-colors ${color}`} />
+    {/* CSS-based transition prevents framer-motion from resetting animations on exit */}
+    <div className={`absolute inset-0 transition-opacity duration-300 ${isLocked ? 'opacity-0' : 'opacity-100'}`}>
+      <motion.div 
+        className="absolute inset-0 rounded-full mix-blend-screen"
+        style={{ background: 'conic-gradient(from 0deg, transparent 70%, currentColor 100%)', opacity: 0.4 }}
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+      />
+      <motion.div 
+        className="absolute inset-4 rounded-full border border-current opacity-30" 
+        style={{ borderStyle: "dashed" }} 
+        animate={{ rotate: -360 }} 
+        transition={{ duration: 4, repeat: Infinity, ease: "linear" }} 
+      />
+    </div>
+
+    <div className={`absolute inset-0 rounded-full border border-current transition-all duration-300 ${isLocked ? "opacity-30 border-[1px] scale-90" : "opacity-10 scale-100"}`} />
+    
+    <motion.div initial={{ height: 0 }} animate={{ height: "100%" }} transition={{ duration: 0.8, ease: "easeOut" }} className="absolute w-[1px] bg-current opacity-50 transition-colors" />
+    <motion.div initial={{ width: 0 }} animate={{ width: "100%" }} transition={{ duration: 0.8, ease: "easeOut" }} className="absolute h-[1px] bg-current opacity-50 transition-colors" />
     
     {/* Target Square that aggressively snaps on lock */}
     <motion.div 
       initial={{ scale: 4, opacity: 0, rotate: 45 }} 
       animate={isLocked ? { scale: 0.8, opacity: 1, rotate: 0 } : { scale: 1, opacity: 0.8, rotate: 0 }} 
       transition={isLocked ? { type: "spring", stiffness: 500, damping: 20 } : { duration: 0.6, ease: "circOut", delay: 0.2 }}
-      className={`absolute w-12 h-12 border border-current transition-all duration-300 ${isLocked ? "opacity-100 border-[3px]" : "opacity-80"} ${color}`}
+      className={`absolute w-12 h-12 border border-current transition-all duration-300 ${isLocked ? "opacity-100 border-[3px]" : "opacity-80"}`}
     >
-      <div className={`absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-current ${color}`} />
-      <div className={`absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-current ${color}`} />
-      <div className={`absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-current ${color}`} />
-      <div className={`absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-current ${color}`} />
+      <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-current" />
+      <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-current" />
+      <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-current" />
+      <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-current" />
     </motion.div>
   </div>
 );
