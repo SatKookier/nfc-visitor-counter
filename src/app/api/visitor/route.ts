@@ -27,15 +27,22 @@ export async function POST(req: Request) {
       });
     }
 
+    const body = await req.json().catch(() => ({}));
+    const isReturning = !!body?.isReturning;
+
     // Atomic increments using Redis pipeline for speed
     const p = redis.pipeline();
-    p.incr('global_visitor_count');
+    if (isReturning) {
+      p.get('global_visitor_count');
+    } else {
+      p.incr('global_visitor_count');
+    }
     p.incr(`area_stress:${region}`);
     
     const results = await p.exec();
     
-    // results[0] = global count, results[1] = area stress count
-    const [visitorNumber, areaStress] = results as [number, number];
+    const visitorNumber = parseInt(results[0] as string, 10) || 0;
+    const areaStress = parseInt(results[1] as string, 10) || 0;
 
     return NextResponse.json({ visitorNumber, areaStress, region });
   } catch (error) {

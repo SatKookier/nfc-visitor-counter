@@ -136,7 +136,11 @@ export default function Home() {
     try {
       const storedNumber = localStorage.getItem("nfc_visitor_number");
       
-      const response = await fetch("/api/visitor", { method: "POST" });
+      const response = await fetch("/api/visitor", { 
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isReturning: !!storedNumber })
+      });
       if (!response.ok) throw new Error("Connection failed");
       const data = await response.json();
 
