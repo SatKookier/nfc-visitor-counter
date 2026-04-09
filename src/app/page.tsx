@@ -289,7 +289,7 @@ export default function Home() {
                 initial={{ opacity: 0 }} 
                 animate={{ opacity: 1 }} 
                 transition={{ duration: 0.5, delay: 0.8 }}
-                className="font-mono text-[8.5px] sm:text-[10px] text-white/50 uppercase mt-6 max-w-[220px] leading-relaxed whitespace-normal"
+                className="font-mono text-[8.5px] sm:text-[10px] text-white/50 uppercase mt-3 max-w-[220px] leading-relaxed whitespace-normal"
               >
                 Access log verified. You have been recorded as the <span className={`font-bold ${themeColor}`}>
                   <ScrambleNumber finalNumber={visitorNumber.toString()} delayMs={600} />th
@@ -305,7 +305,7 @@ export default function Home() {
               className="absolute bottom-[10%] sm:bottom-24 left-4 sm:left-12 flex flex-col items-start"
             >
               
-              <div className="flex items-center space-x-2 mb-4 opacity-70">
+              <div className="flex items-center space-x-2 mb-1 opacity-70">
                 <div className={`w-8 h-[1px] bg-current ${themeColor}`} />
                 <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-white">NETWORK // SECURE_LINK</span>
               </div>
