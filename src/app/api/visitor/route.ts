@@ -26,14 +26,17 @@ export async function POST(req: Request) {
     };
 
     let resolvedCity = "UNKNOWN";
-    if (city && !city.toUpperCase().includes('SPC')) {
+    if (city) {
       resolvedCity = decodeURIComponent(city).toUpperCase();
+      // Aesthetic overrides for specific suburbs to display major cyber-city names
+      if (resolvedCity === "SPÅNGA") resolvedCity = "STOCKHOLM";
     } else if (edge) {
       const edgeCode = edge.split('::')[0].toLowerCase();
       resolvedCity = EDGE_CITY_MAP[edgeCode] || edgeCode.toUpperCase();
     }
 
-    const region = resolvedCity.replace(/[^a-zA-Z0-9_ -]/g, '').toUpperCase() || "UNKNOWN SECTOR";
+    // Allow standard alphanumeric and European Latin-1 accented characters (like å, ä, ö, é, etc.)
+    const region = resolvedCity.replace(/[^a-zA-Z0-9_\u00C0-\u017F -]/g, '').toUpperCase() || "UNKNOWN SECTOR";
     if (!redis) {
       // Offline fallback
       return NextResponse.json({ 
