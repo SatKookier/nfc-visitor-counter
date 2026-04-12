@@ -138,7 +138,7 @@ export default function Home() {
 
   const checkVisitorStatus = async () => {
     try {
-      const storedNumber = localStorage.getItem("nfc_visitor_number");
+      const storedNumber = localStorage.getItem("nfc_visitor_id_v2");
       
       const response = await fetch("/api/visitor", { 
         method: "POST",
@@ -155,7 +155,7 @@ export default function Home() {
         setVisitorNumber(parseInt(storedNumber, 10));
         setIsReturning(true);
       } else if (data.visitorNumber) {
-        localStorage.setItem("nfc_visitor_number", data.visitorNumber.toString());
+        localStorage.setItem("nfc_visitor_id_v2", data.visitorNumber.toString());
         setVisitorNumber(data.visitorNumber);
       } else {
         throw new Error("Invalid response");
