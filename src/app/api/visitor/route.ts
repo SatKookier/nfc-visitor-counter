@@ -13,11 +13,13 @@ const redis = (redisUrl && redisToken)
 
 export async function POST(req: Request) {
   try {
-    // Attempt to retrieve city from Vercel's IP Geolocation headers
-    // Fallback to "UNKNOWN_SECTOR" for local dev or missing headers
-    const rawCity = req.headers.get('x-vercel-ip-city') || 'UNKNOWN_SECTOR';
+    const city = req.headers.get('x-vercel-ip-city');
+    const country = req.headers.get('x-vercel-ip-country');
+    const edge = req.headers.get('x-vercel-id'); // e.g., hnd1::randomstr
+    
+    // Fallback beautifully: City -> Country -> Region Edge Code -> "UNKNOWN"
+    let rawCity = city || country || (edge ? edge.split('::')[0] : 'UNKNOWN');
     const region = rawCity.replace(/[^a-zA-Z0-9_ -]/g, '').toUpperCase();
-
     if (!redis) {
       // Offline fallback
       return NextResponse.json({ 

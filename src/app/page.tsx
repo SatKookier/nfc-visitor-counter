@@ -262,11 +262,11 @@ export default function Home() {
               </span>
               
               <div className="flex items-baseline overflow-hidden py-1">
-                <span className="font-sans text-[4.5rem] sm:text-[7rem] md:text-[8rem] font-bold tracking-tighter text-white leading-none">
+                <span className="font-anton text-[4.5rem] sm:text-[7rem] md:text-[8rem] tracking-tighter text-white leading-none">
                   {/* Wait 200ms AFTER panel arrives before scrambling for solid impact */}
                   <ScrambleNumber finalNumber={numericValue.split(".")[0]} delayMs={300} />
                 </span>
-                <span className={`font-mono text-2xl sm:text-4xl font-bold ml-1 ${themeColor}`}>
+                <span className={`font-anton text-2xl sm:text-4xl pl-1 ${themeColor}`}>
                   .{numericValue.split(".")[1]}
                 </span>
               </div>
@@ -332,17 +332,17 @@ export default function Home() {
                   AREA SYNCHRO LEVEL
                 </span>
                 <div className="flex items-end space-x-3 mb-1">
-                  <span className="font-mono italic font-bold text-3xl sm:text-4xl text-white leading-none">
+                  <span className="font-rajdhani italic font-bold text-4xl sm:text-5xl text-white leading-none tracking-tighter">
                     <ScrambleNumber finalNumber={areaStress.toString().padStart(2, "0")} delayMs={500} />
                   </span>
                   <span className="font-mono text-[8px] text-white/50 tracking-widest mb-1">
                     {region}
                   </span>
                 </div>
-                <span className="font-mono text-[7px] sm:text-[8px] text-white/40 uppercase mt-2 max-w-[190px] leading-relaxed">
-                  Regional synchro-log updated. YOU and <span className={`font-bold text-white`}>
-                    <ScrambleNumber finalNumber={areaStress > 1 ? (areaStress - 1).toString() : "0"} delayMs={600} />
-                  </span> OTHER ENTITIES have synchronized within the [{region}] sector.
+                <span className="font-mono text-[7px] sm:text-[8px] text-white/50 uppercase mt-2 max-w-[200px] leading-relaxed">
+                  REGIONAL ACTIVITY LOG UPDATED. <span className={`font-bold text-white`}>
+                    <ScrambleNumber finalNumber={areaStress.toString()} delayMs={600} />
+                  </span> SYNCHRONIZATION EVENTS LOGGED IN SECTOR [{region}].
                 </span>
               </div>
             </motion.div>
