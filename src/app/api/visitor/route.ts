@@ -66,21 +66,52 @@ export async function POST(req: Request) {
 
     // Trigger Telegram Alert asynchronously if this is a NEW entity
     if (!isReturning && process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
-      const userAgent = req.headers.get('user-agent') || 'UNKNOWN_DEVICE';
-      const device = userAgent.includes('iPhone') ? 'Apple iOS' 
-                   : userAgent.includes('Android') ? 'Android OS'
-                   : userAgent.includes('Mac') ? 'Mac OS'
-                   : userAgent.includes('Windows') ? 'Windows OS'
-                   : 'UNKNOWN TERMINAL';
+      const userAgent = (req.headers.get('user-agent') || '').toLowerCase();
+      
+      // Detailed UA Analysis
+      const isMobile = /mobile|android|ip(hone|od|ad)|blackberry|iemobile|silk/i.test(userAgent);
+      const hardware = isMobile ? 'Mobile/Tablet' : 'Desktop/PC';
+      
+      let os = "Unknown OS";
+      if (userAgent.includes('windows')) os = 'Windows';
+      else if (userAgent.includes('mac os x')) os = isMobile ? 'Apple iOS' : 'Apple macOS';
+      else if (userAgent.includes('android')) os = 'Android';
+      else if (userAgent.includes('linux')) os = 'Linux';
+
+      let browser = "Unknown Browser";
+      let isAnomalous = false;
+
+      // Detect Identity/Privacy Browsers & In-App Viewers
+      if (userAgent.includes('twitter') || userAgent.includes('fban') || userAgent.includes('line')) {
+        browser = 'In-App Browser (SNS)';
+        isAnomalous = true; // Secondary link tracing
+      } else if (userAgent.includes('duckduckgo') || userAgent.includes('fxios') || userAgent.includes('edgios')) {
+        browser = 'Privacy/Proxy Browser';
+        isAnomalous = true; // Identity obfuscation
+      } else if (userAgent.includes('edg/')) browser = 'Microsoft Edge';
+      else if (userAgent.includes('crios/') || userAgent.includes('chrome/')) browser = 'Google Chrome';
+      else if (userAgent.includes('safari/') && !userAgent.includes('chrome/')) browser = 'Apple Safari';
+      else if (userAgent.includes('firefox/')) browser = 'Mozilla Firefox';
+
+      // Desktop access from an NFC tag is inherently anomalous
+      if (!isMobile && (os === 'Windows' || os === 'Apple macOS' || os === 'Linux')) {
+        isAnomalous = true;
+      }
+
+      const threatLevel = isAnomalous ? "🟥 LETHAL ELIMINATOR" : "🟦 NON-LETHAL PARALYZER";
+      const operationStatus = isAnomalous ? "WARNING: Irregular access vector detected." : "System operation normal.";
 
       const telegramMsg = `
 🚨 [ NEW ENTITY DETECTED ] 🚨
 ============================
 ▶ SECTOR: ${region}
-▶ DEVICE: ${device}
+▶ THREAT LEVEL: ${threatLevel}
+▶ OS: ${os}
+▶ BROWSER: ${browser}
+▶ HARDWARE: ${hardware}
 ▶ VISITOR COEFFICIENT: ${visitorNumber.toString().padStart(3, '0')}
 ============================
-System operation normal.
+${operationStatus}
       `.trim();
 
       // Await the fetch to ensure Vercel doesn't kill the serverless function prematurely
