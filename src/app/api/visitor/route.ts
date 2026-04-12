@@ -64,43 +64,42 @@ export async function POST(req: Request) {
     const visitorNumber = parseInt(results[0] as string, 10) || 0;
     const areaStress = parseInt(results[1] as string, 10) || 0;
 
+    // Detailed UA Analysis
+    const userAgent = (req.headers.get('user-agent') || '').toLowerCase();
+    const isMobile = /mobile|android|ip(hone|od|ad)|blackberry|iemobile|silk/i.test(userAgent);
+    const hardware = isMobile ? 'Mobile/Tablet' : 'Desktop/PC';
+    
+    let os = "Unknown OS";
+    if (userAgent.includes('windows')) os = 'Windows';
+    else if (userAgent.includes('mac os x')) os = isMobile ? 'Apple iOS' : 'Apple macOS';
+    else if (userAgent.includes('android')) os = 'Android';
+    else if (userAgent.includes('linux')) os = 'Linux';
+
+    let browser = "Unknown Browser";
+    let isAnomalous = false;
+
+    // Detect Identity/Privacy Browsers & In-App Viewers
+    if (userAgent.includes('twitter') || userAgent.includes('fban') || userAgent.includes('line')) {
+      browser = 'In-App Browser (SNS)';
+      // (Optionally anomalous, but user specifically asked for Desktop and Privacy browsers)
+    } else if (userAgent.includes('duckduckgo') || userAgent.includes('fxios') || userAgent.includes('edgios')) {
+      browser = 'Privacy/Proxy Browser';
+      isAnomalous = true; // Proposal 2: Privacy/Anonymity
+    } else if (userAgent.includes('edg/')) browser = 'Microsoft Edge';
+    else if (userAgent.includes('crios/') || userAgent.includes('chrome/')) browser = 'Google Chrome';
+    else if (userAgent.includes('safari/') && !userAgent.includes('chrome/')) browser = 'Apple Safari';
+    else if (userAgent.includes('firefox/')) browser = 'Mozilla Firefox';
+
+    // Desktop access from an NFC tag is inherently anomalous
+    if (!isMobile && (os === 'Windows' || os === 'Apple macOS' || os === 'Linux')) {
+      isAnomalous = true; // Proposal 1: Explicit Desktop Access
+    }
+
+    const threatLevel = isAnomalous ? "🟥 LETHAL ELIMINATOR" : "🟦 NON-LETHAL PARALYZER";
+    const operationStatus = isAnomalous ? "WARNING: Irregular access vector detected." : "System operation normal.";
+
     // Trigger Telegram Alert asynchronously if this is a NEW entity
     if (!isReturning && process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
-      const userAgent = (req.headers.get('user-agent') || '').toLowerCase();
-      
-      // Detailed UA Analysis
-      const isMobile = /mobile|android|ip(hone|od|ad)|blackberry|iemobile|silk/i.test(userAgent);
-      const hardware = isMobile ? 'Mobile/Tablet' : 'Desktop/PC';
-      
-      let os = "Unknown OS";
-      if (userAgent.includes('windows')) os = 'Windows';
-      else if (userAgent.includes('mac os x')) os = isMobile ? 'Apple iOS' : 'Apple macOS';
-      else if (userAgent.includes('android')) os = 'Android';
-      else if (userAgent.includes('linux')) os = 'Linux';
-
-      let browser = "Unknown Browser";
-      let isAnomalous = false;
-
-      // Detect Identity/Privacy Browsers & In-App Viewers
-      if (userAgent.includes('twitter') || userAgent.includes('fban') || userAgent.includes('line')) {
-        browser = 'In-App Browser (SNS)';
-        isAnomalous = true; // Secondary link tracing
-      } else if (userAgent.includes('duckduckgo') || userAgent.includes('fxios') || userAgent.includes('edgios')) {
-        browser = 'Privacy/Proxy Browser';
-        isAnomalous = true; // Identity obfuscation
-      } else if (userAgent.includes('edg/')) browser = 'Microsoft Edge';
-      else if (userAgent.includes('crios/') || userAgent.includes('chrome/')) browser = 'Google Chrome';
-      else if (userAgent.includes('safari/') && !userAgent.includes('chrome/')) browser = 'Apple Safari';
-      else if (userAgent.includes('firefox/')) browser = 'Mozilla Firefox';
-
-      // Desktop access from an NFC tag is inherently anomalous
-      if (!isMobile && (os === 'Windows' || os === 'Apple macOS' || os === 'Linux')) {
-        isAnomalous = true;
-      }
-
-      const threatLevel = isAnomalous ? "🟥 LETHAL ELIMINATOR" : "🟦 NON-LETHAL PARALYZER";
-      const operationStatus = isAnomalous ? "WARNING: Irregular access vector detected." : "System operation normal.";
-
       const telegramMsg = `
 🚨 [ NEW ENTITY DETECTED ] 🚨
 ============================
@@ -125,7 +124,7 @@ ${operationStatus}
       }).catch(err => console.error("Telegram Error:", err));
     }
 
-    return NextResponse.json({ visitorNumber, areaStress, region });
+    return NextResponse.json({ visitorNumber, areaStress, region, isAnomalous });
   } catch (error) {
     console.error('Error in scanning process:', error);
     return NextResponse.json(

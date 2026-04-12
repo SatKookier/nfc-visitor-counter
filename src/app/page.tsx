@@ -124,6 +124,7 @@ export default function Home() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [scanStage, setScanStage] = useState<number>(0); 
+  const [isAnomalous, setIsAnomalous] = useState<boolean>(false);
   
   useEffect(() => {
     if (window.location.search.includes("reset=true")) {
@@ -150,6 +151,7 @@ export default function Home() {
 
       setRegion(data.region || "UNKNOWN");
       setAreaStress(data.areaStress || 0);
+      setIsAnomalous(!!data.isAnomalous);
 
       if (storedNumber) {
         setVisitorNumber(parseInt(storedNumber, 10));
@@ -175,7 +177,11 @@ export default function Home() {
   let shadowColor = "drop-shadow-[0_0_10px_rgba(0,229,255,0.8)]";
   let targetAction = isReturning ? "KNOWN ENTITY RESTORED" : "NEW SYNCHRONIZATION";
   
-  if (error) {
+  if (isAnomalous) {
+    themeColor = "border-red-600 text-red-600";
+    shadowColor = "drop-shadow-[0_0_15px_rgba(220,38,38,0.9)]";
+    targetAction = "LETHAL ELIMINATOR - ENFORCEMENT REQUIRED";
+  } else if (error) {
     themeColor = "border-red-500 text-red-500";
     shadowColor = "drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]";
     targetAction = "SYSTEM ERROR";
