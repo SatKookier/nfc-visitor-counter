@@ -19,6 +19,9 @@ export async function POST(req: Request) {
     
     // Fallback beautifully: City -> Country -> Region Edge Code -> "UNKNOWN"
     let rawCity = city || country || (edge ? edge.split('::')[0] : 'UNKNOWN');
+    if (rawCity.toUpperCase().includes('SPC')) {
+      rawCity = edge ? edge.split('::')[0] : 'TOKYO';
+    }
     const region = rawCity.replace(/[^a-zA-Z0-9_ -]/g, '').toUpperCase();
     if (!redis) {
       // Offline fallback

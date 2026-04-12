@@ -17,5 +17,13 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), sans-serif;
+  font-family: var(--font-sharetech), monospace;
+}
+
+.font-anton {
+  font-family: var(--font-anton), sans-serif;
+}
+
+.font-rajdhani {
+  font-family: var(--font-rajdhani), sans-serif;
 }
