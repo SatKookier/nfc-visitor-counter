@@ -83,8 +83,8 @@ export async function POST(req: Request) {
 System operation normal.
       `.trim();
 
-      // Fire and forget (don't await) to keep frontend ultra-fast
-      fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      // Await the fetch to ensure Vercel doesn't kill the serverless function prematurely
+      await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
