@@ -28,8 +28,6 @@ export async function POST(req: Request) {
     let resolvedCity = "UNKNOWN";
     if (city) {
       resolvedCity = decodeURIComponent(city).toUpperCase();
-      // Aesthetic overrides for specific suburbs to display major cyber-city names
-      if (resolvedCity === "SPÅNGA") resolvedCity = "STOCKHOLM";
     } else if (edge) {
       const edgeCode = edge.split('::')[0].toLowerCase();
       resolvedCity = EDGE_CITY_MAP[edgeCode] || edgeCode.toUpperCase();
