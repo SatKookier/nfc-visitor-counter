@@ -180,7 +180,6 @@ export default function Home() {
   if (isAnomalous) {
     themeColor = "border-red-600 text-red-600";
     shadowColor = "drop-shadow-[0_0_15px_rgba(220,38,38,0.9)]";
-    targetAction = "LETHAL ELIMINATOR - ENFORCEMENT REQUIRED";
   } else if (error) {
     themeColor = "border-red-500 text-red-500";
     shadowColor = "drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]";
