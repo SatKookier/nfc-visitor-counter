@@ -14,15 +14,26 @@ const redis = (redisUrl && redisToken)
 export async function POST(req: Request) {
   try {
     const city = req.headers.get('x-vercel-ip-city');
-    const country = req.headers.get('x-vercel-ip-country');
     const edge = req.headers.get('x-vercel-id'); // e.g., hnd1::randomstr
     
-    // Fallback beautifully: City -> Country -> Region Edge Code -> "UNKNOWN"
-    let rawCity = city || country || (edge ? edge.split('::')[0] : 'UNKNOWN');
-    if (rawCity.toUpperCase().includes('SPC')) {
-      rawCity = edge ? edge.split('::')[0] : 'TOKYO';
+    // Map of Vercel Edge Server codes to real-world cyber-sectors
+    const EDGE_CITY_MAP: Record<string, string> = {
+      hnd1: "TOKYO", nrt1: "TOKYO", kix1: "OSAKA",
+      arn1: "STOCKHOLM",
+      sfo1: "SAN FRANCISCO", jfk1: "NEW YORK", iad1: "WASHINGTON DC",
+      icn1: "SEOUL", sin1: "SINGAPORE", syd1: "SYDNEY",
+      lhr1: "LONDON", cdg1: "PARIS", fra1: "FRANKFURT"
+    };
+
+    let resolvedCity = "UNKNOWN";
+    if (city && !city.toUpperCase().includes('SPC')) {
+      resolvedCity = decodeURIComponent(city).toUpperCase();
+    } else if (edge) {
+      const edgeCode = edge.split('::')[0].toLowerCase();
+      resolvedCity = EDGE_CITY_MAP[edgeCode] || edgeCode.toUpperCase();
     }
-    const region = rawCity.replace(/[^a-zA-Z0-9_ -]/g, '').toUpperCase();
+
+    const region = resolvedCity.replace(/[^a-zA-Z0-9_ -]/g, '').toUpperCase() || "UNKNOWN SECTOR";
     if (!redis) {
       // Offline fallback
       return NextResponse.json({ 
