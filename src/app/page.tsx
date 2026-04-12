@@ -126,6 +126,10 @@ export default function Home() {
   const [scanStage, setScanStage] = useState<number>(0); 
   
   useEffect(() => {
+    if (window.location.search.includes("reset=true")) {
+      localStorage.removeItem("nfc_visitor_number");
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
     // Artificial dramatic delay
     const t1 = setTimeout(() => setScanStage(1), 1000); 
     const t2 = setTimeout(() => checkVisitorStatus(), 3500); 
