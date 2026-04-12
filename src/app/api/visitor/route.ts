@@ -64,6 +64,36 @@ export async function POST(req: Request) {
     const visitorNumber = parseInt(results[0] as string, 10) || 0;
     const areaStress = parseInt(results[1] as string, 10) || 0;
 
+    // Trigger Telegram Alert asynchronously if this is a NEW entity
+    if (!isReturning && process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
+      const userAgent = req.headers.get('user-agent') || 'UNKNOWN_DEVICE';
+      const device = userAgent.includes('iPhone') ? 'Apple iOS' 
+                   : userAgent.includes('Android') ? 'Android OS'
+                   : userAgent.includes('Mac') ? 'Mac OS'
+                   : userAgent.includes('Windows') ? 'Windows OS'
+                   : 'UNKNOWN TERMINAL';
+
+      const telegramMsg = `
+🚨 [ NEW ENTITY DETECTED ] 🚨
+============================
+▶ SECTOR: ${region}
+▶ DEVICE: ${device}
+▶ VISITOR COEFFICIENT: ${visitorNumber.toString().padStart(3, '0')}
+============================
+System operation normal.
+      `.trim();
+
+      // Fire and forget (don't await) to keep frontend ultra-fast
+      fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: process.env.TELEGRAM_CHAT_ID,
+          text: telegramMsg,
+        })
+      }).catch(err => console.error("Telegram Error:", err));
+    }
+
     return NextResponse.json({ visitorNumber, areaStress, region });
   } catch (error) {
     console.error('Error in scanning process:', error);
