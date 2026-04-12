@@ -26,11 +26,14 @@ export async function POST(req: Request) {
     };
 
     let resolvedCity = "UNKNOWN";
-    if (city) {
-      resolvedCity = decodeURIComponent(city).toUpperCase();
-    } else if (edge) {
+    
+    if (edge) {
+      // Primary Sector Rule: ALWAYS group by major server edge (e.g. all of Kanto/East Japan -> TOKYO)
       const edgeCode = edge.split('::')[0].toLowerCase();
       resolvedCity = EDGE_CITY_MAP[edgeCode] || edgeCode.toUpperCase();
+    } else if (city) {
+      // Fallback only if edge is completely unavailable
+      resolvedCity = decodeURIComponent(city).toUpperCase();
     }
 
     // Allow standard alphanumeric and European Latin-1 accented characters (like å, ä, ö, é, etc.)
