@@ -128,7 +128,12 @@ ${operationStatus}
   } catch (error: any) {
     console.error('Error in scanning process:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', details: error?.message || String(error), stack: error?.stack },
+      { 
+        error: 'Internal Server Error', 
+        details: error?.message || String(error), 
+        stack: error?.stack,
+        debug_url: redisUrl ? redisUrl.substring(0, 25) + '...' : 'MISSING'
+      },
       { status: 500 }
     );
   }
