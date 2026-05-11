@@ -125,10 +125,10 @@ ${operationStatus}
     }
 
     return NextResponse.json({ visitorNumber, areaStress, region, isAnomalous });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in scanning process:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Internal Server Error', details: error?.message || String(error), stack: error?.stack },
       { status: 500 }
     );
   }
